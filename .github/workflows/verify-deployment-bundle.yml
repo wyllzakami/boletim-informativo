@@ -1,0 +1,15 @@
+name: Verify deployment bundle
+on:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild and verify application archive
+        run: |
+          cat bundle-0*.b64 | base64 -d > /tmp/boletim-app.tgz
+          echo 'b6d40a5e888cebb6813a6aea993a2599f03c5921418a15fd09c90e8e1ef7ccf1  /tmp/boletim-app.tgz' | sha256sum -c -
+          tar -tzf /tmp/boletim-app.tgz >/dev/null
+          echo 'Archive is valid.'
