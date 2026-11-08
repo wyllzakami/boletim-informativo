@@ -1,0 +1,49 @@
+name: Assemble Boletim Informativo 2.1.1 test bundle
+
+on:
+  push:
+    branches:
+      - boletim-2.1.1-build
+    paths:
+      - scripts/build-boletim-2.1.1.py
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out build branch
+        uses: actions/checkout@v4
+        with:
+          ref: boletim-2.1.1-build
+          fetch-depth: 0
+
+      - name: Rebuild and publish bundle to test branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin boletim-2.0-teste
+          git worktree add --detach /tmp/boletim-test-branch origin/boletim-2.0-teste
+          mkdir -p /tmp/boletim-unpacked
+          cat /tmp/boletim-test-branch/bundle-v2-*.b64 | base64 --decode > /tmp/boletim-v2-old.tar.gz
+          tar -xzf /tmp/boletim-v2-old.tar.gz -C /tmp/boletim-unpacked
+          python scripts/build-boletim-2.1.1.py /tmp/boletim-unpacked/boletim-informativo
+          (cd /tmp/boletim-unpacked/boletim-informativo && npm run check)
+          tar -czf /tmp/boletim-v2-new.tar.gz -C /tmp/boletim-unpacked boletim-informativo
+          base64 -w0 /tmp/boletim-v2-new.tar.gz > /tmp/boletim-v2-new.b64
+          python3 - <<'PY'
+          from pathlib import Path
+          encoded = Path("/tmp/boletim-v2-new.b64").read_text()
+          chunks = [encoded[i:i+2500] for i in range(0, len(encoded), 2500)]
+          target = Path("/tmp/boletim-test-branch")
+          for old in target.glob("bundle-v2-*.b64"):
+              old.unlink()
+          for index, chunk in enumerate(chunks):
+              (target / f"bundle-v2-{index:02d}.b64").write_text(chunk)
+          print(f"Created {len(chunks)} bundle chunks.")
+          PY
+          git -C /tmp/boletim-test-branch add -A
+          git -C /tmp/boletim-test-branch -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Build Boletim Informativo 2.1.1 test bundle"
+          git -C /tmp/boletim-test-branch push origin HEAD:refs/heads/boletim-2.0-teste
