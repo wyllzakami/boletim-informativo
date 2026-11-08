@@ -1,28 +1,42 @@
-# Boletim Informativo 2.0 — ambiente de teste
+# Boletim Informativo 2.2.0 — ambiente de apresentação
 
-Esta branch mantém a demonstração da versão 1.0 em `main` sem alterações.
+Esta branch contém a versão de apresentação 2.2.0. A branch `main` permanece separada.
 
-O pacote da aplicação 2.0 está dividido em arquivos `bundle-v2-00.b64` até `bundle-v2-08.b64`. O serviço de teste no Render reconstrói o diretório da aplicação durante o build.
+## Recursos incluídos
 
-## Configuração usada no Render
+- Acesso interno com cadastro por solicitação e aprovação administrativa.
+- Perfis: leitor, publicador, administrador secundário e Administrador Principal.
+- Administradores secundários podem apoiar a gestão de usuários comuns, publicações, destaques, convites e registros.
+- Somente o Administrador Principal pode promover, rebaixar, suspender ou reativar administradores secundários. A conta principal é protegida contra alterações pelas demais contas.
+- Comunicados com imagem, links e um anexo PDF opcional (até 4 MB).
+- PDF validado no servidor e disponível apenas para usuários autenticados.
+- Até cinco destaques fixos, ordenação administrativa e navegação para o comunicado original.
+- Validade e arquivamento automático de comunicados.
+- Convites por QR Code com aprovação posterior do cadastro.
+
+## Configuração de execução
 
 - Branch: `boletim-2.0-teste`
-- Runtime: Node.js
-- Build:
-  `cat bundle-v2-*.b64 | base64 -d > /tmp/boletim-v2.tar.gz && tar -xzf /tmp/boletim-v2.tar.gz -C .`
-- Start:
-  `npm --prefix boletim-informativo start`
+- Runtime: Node.js 18+
+- Build: `cat bundle-v2-*.b64 | base64 -d > /tmp/boletim-v2.tar.gz && tar -xzf /tmp/boletim-v2.tar.gz -C .`
+- Start: `npm --prefix boletim-informativo start`
 - Health check: `/health`
 
-## Primeiro administrador
+## Administrador Principal inicial
 
-O primeiro administrador é inicializado por variáveis de ambiente protegidas no Render:
+A conta inicial é criada por variáveis protegidas no Render:
 - `BOOTSTRAP_ADMIN_USERNAME`
 - `BOOTSTRAP_ADMIN_EMAIL`
 - `BOOTSTRAP_ADMIN_PASSWORD`
 
-Não armazene os valores dessas variáveis neste repositório. Não inclua arquivos `.env` ou `data.json` no commit.
+Não armazene esses valores neste repositório. Em bases existentes, a inicialização identifica/designa uma conta principal. Nunca compartilhe os segredos nem inclua `.env` ou dados de usuários no commit.
 
-## Limitações do ambiente de teste
+## Limitações importantes
 
-A aplicação ainda usa armazenamento local `data.json` e sessões em memória. A camada gratuita do Render não fornece disco persistente. Portanto, cadastros, publicações e sessões podem ser perdidos em reinicializações ou novos deploys. Não use dados institucionais confidenciais até migrar para banco persistente, configurar backups e restringir o acesso por rede privada/VPN.
+Esta é uma demonstração para avaliação, não uma instalação pronta para uso institucional. A aplicação ainda usa `data.json`, sessões em memória e arquivos locais. O serviço gratuito do Render tem armazenamento efêmero: contas, publicações, sessões e anexos podem ser perdidos em reinicializações ou novos deploys.
+
+Não utilize informações pessoais, escalas, dados de RH ou documentos confidenciais neste ambiente. Antes do uso real, migrar para PostgreSQL, sessões persistentes e armazenamento durável de anexos; configurar backups com restauração testada; restringir acesso por rede privada/VPN; e realizar revisão de segurança e privacidade com a TI.
+
+## Evolução após aprovação
+
+A futura versão multiunidade deverá modelar empresa, região, unidade (CD/loja) e setor em uma única aplicação, com permissões por escopo e comunicados locais ou gerais. A identidade visual, logotipo e paleta institucional serão aplicados após a validação da empresa.
